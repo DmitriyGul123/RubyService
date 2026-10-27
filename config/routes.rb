@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   root "pages#home"
 
   resources :users, only: %i[new create]
+  post "titles/:title_id/watchlist", to: "watchlist_items#create", as: :title_watchlist
+  delete "titles/:title_id/watchlist", to: "watchlist_items#destroy"
+  get "watchlist", to: "pages#watchlist", as: :watchlist
 
   get "login", to: "sessions#new"
   post "login", to: "sessions#create"

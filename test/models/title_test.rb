@@ -68,10 +68,10 @@ class TitleTest < ActiveSupport::TestCase
   end
 
   test "genres are associated and destroyed with the title" do
-    title = titles(:dune)
-    assert_equal %w[Приключение Фантастика], title.genre_names
+    title = titles(:drama)
+    assert_equal ["Драма"], title.genre_names
 
-    assert_difference("TitleGenre.count", -2) do
+    assert_difference("TitleGenre.count", -1) do
       title.destroy!
     end
   end

@@ -35,6 +35,7 @@
         <div class="nav-right">
           <% if current_user %>
             <span class="username"><%= current_user.username %></span>
+            <%= link_to "Мой список", watchlist_path, class: "nav-link" %>
             <%= button_to "Выйти", logout_path, method: :delete, class: "nav-button" %>
           <% else %>
             <%= link_to "Войти", login_path, class: "nav-link" %>

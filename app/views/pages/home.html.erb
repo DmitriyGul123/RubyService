@@ -30,8 +30,8 @@
   <section class="recommendations" id="recommendations">
     <div class="section-title-row">
       <div>
-        <p class="section-kicker">ПОДБОРКА РЕДАКЦИИ</p>
-        <h2>Выбрано для вас<span class="title-period">.</span></h2>
+        <p class="section-kicker"><%= @watchlist ? "ВАША КОЛЛЕКЦИЯ" : "ПОДБОРКА РЕДАКЦИИ" %></p>
+        <h2><%= @watchlist ? "Мой список" : "Выбрано для вас" %><span class="title-period">.</span></h2>
       </div>
       <p class="section-aside">Меньше бесконечного скролла.<br>Больше попаданий в настроение.</p>
     </div>
@@ -40,7 +40,7 @@
       <nav class="kind-tabs" aria-label="Тип контента">
         <% ["Все", "Фильмы", "Сериалы", "Игры"].each do |kind| %>
           <% query = request.query_parameters.except("kind").merge("kind" => kind == "Все" ? nil : kind).compact %>
-          <%= link_to kind, root_path(query), class: "kind-tab #{'is-active' if @kind == kind}", aria: { current: (@kind == kind ? "page" : nil) } %>
+          <%= link_to kind, (@watchlist ? watchlist_path(query) : root_path(query)), class: "kind-tab #{'is-active' if @kind == kind}", aria: { current: (@kind == kind ? "page" : nil) } %>
         <% end %>
       </nav>
       <%= form_with url: root_path, method: :get, class: "genre-filter", local: true do |form| %>
@@ -56,7 +56,15 @@
           <div class="poster">
             <img src="<%= title.poster_url %>" alt="Иллюстрация: <%= title.name %>" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=700&q=85'">
             <span class="poster-type"><%= title.kind %></span>
-            <button type="button" class="save-button" data-save-title="<%= title.name %>" aria-label="Добавить «<%= title.name %>» в мой список" aria-pressed="false" title="Добавить в мой список"><span aria-hidden="true">♡</span></button>
+            <% if current_user %>
+              <% if @watchlist_title_ids.include?(title.id) %>
+                <%= button_to title_watchlist_path(title), method: :delete, class: "save-button is-saved", aria: { label: "Убрать «#{title.name}» из моего списка" }, title: "Убрать из моего списка" do %><span aria-hidden="true">♥</span><% end %>
+              <% else %>
+                <%= button_to title_watchlist_path(title), method: :post, class: "save-button", aria: { label: "Добавить «#{title.name}» в мой список" }, title: "Добавить в мой список" do %><span aria-hidden="true">♡</span><% end %>
+              <% end %>
+            <% else %>
+              <%= link_to login_path, class: "save-button", aria: { label: "Войдите, чтобы сохранить «#{title.name}»" }, title: "Войти, чтобы сохранить" do %><span aria-hidden="true">♡</span><% end %>
+            <% end %>
             <span class="poster-score"><span aria-hidden="true">★</span> <%= number_with_precision(title.rating, precision: 1) %></span>
           </div>
           <div class="title-card-info">
@@ -66,11 +74,11 @@
         </article>
       <% end %>
       <% if @titles.empty? %>
-        <div class="empty-results"><span aria-hidden="true">⌕</span><h3>Ничего не нашлось</h3><p>Попробуйте другой запрос или сбросьте фильтры.</p><%= link_to "Сбросить фильтры", root_path, class: "button button-outline" %></div>
+        <div class="empty-results"><span aria-hidden="true">⌕</span><h3><%= @watchlist ? "В списке пока пусто" : "Ничего не нашлось" %></h3><p><%= @watchlist ? "Добавляйте фильмы, сериалы и игры из подборки." : "Попробуйте другой запрос или сбросьте фильтры." %></p><%= link_to "Перейти к подборке", root_path, class: "button button-outline" %></div>
       <% end %>
     </div>
 
-    <div class="demo-notice"><span class="notice-mark">i</span><span>Демонстрационные оценки приведены для ориентира. Персональные рекомендации и синхронизация списка с аккаунтом пока не подключены.</span></div>
+    <div class="demo-notice"><span class="notice-mark">i</span><span>Оценки в подборке приведены для ориентира. Ваш список сохраняется в аккаунте.</span></div>
   </section>
 
   <section class="taste-banner">
@@ -79,31 +87,3 @@
     <a href="#recommendations" class="button button-light">Подобрать ещё <span aria-hidden="true">↗</span></a>
   </section>
 </div>
-
-<script>
-  document.addEventListener("turbo:load", () => {
-    const storageKey = "reelplay-watchlist";
-    const readList = () => {
-      try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
-      catch { return []; }
-    };
-    const saved = new Set(readList());
-    document.querySelectorAll("[data-save-title]").forEach((button) => {
-      const title = button.dataset.saveTitle;
-      const update = (isSaved) => {
-        button.setAttribute("aria-pressed", String(isSaved));
-        button.setAttribute("aria-label", `${isSaved ? "Убрать" : "Добавить"} «${title}» ${isSaved ? "из" : "в"} моего списка`);
-        button.title = isSaved ? "Убрать из моего списка" : "Добавить в мой список";
-        button.querySelector("span").textContent = isSaved ? "♥" : "♡";
-      };
-      update(saved.has(title));
-      button.addEventListener("click", () => {
-        if (saved.has(title)) saved.delete(title);
-        else saved.add(title);
-        localStorage.setItem(storageKey, JSON.stringify([...saved]));
-        update(saved.has(title));
-      });
-    });
-  });
-  document.dispatchEvent(new Event("turbo:load"));
-</script>
