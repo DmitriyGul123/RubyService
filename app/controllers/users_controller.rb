@@ -8,7 +8,7 @@ class UsersController < ApplicationController
 
     if @user.save
       session[:user_id] = @user.id
-      redirect_to root_path, notice: "Welcome, #{@user.username}!"
+      redirect_to root_path, notice: "Добро пожаловать, #{@user.username}!"
     else
       render :new, status: :unprocessable_content
     end

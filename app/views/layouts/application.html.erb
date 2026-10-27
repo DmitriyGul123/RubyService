@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
-    <title><%= content_for(:title) || "Ruby Service" %></title>
+    <title><%= content_for(:title) || "Кадр — что посмотреть и во что сыграть" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Ruby Service">
+    <meta name="application-name" content="Кадр">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -26,16 +26,19 @@
     <header class="site-header">
       <nav class="nav-bar">
         <div class="nav-left">
-          <%= link_to "Home", root_path, class: "nav-link brand" %>
+          <%= link_to root_path, class: "nav-link brand" do %>
+            <span class="brand-mark" aria-hidden="true">К</span>
+            <span>КАДР<span class="brand-accent">+</span></span>
+          <% end %>
         </div>
 
         <div class="nav-right">
           <% if current_user %>
             <span class="username"><%= current_user.username %></span>
-            <%= button_to "Logout", logout_path, method: :delete, class: "nav-button" %>
+            <%= button_to "Выйти", logout_path, method: :delete, class: "nav-button" %>
           <% else %>
-            <%= link_to "Login", login_path, class: "nav-link" %>
-            <%= link_to "Signup", new_user_path, class: "nav-link" %>
+            <%= link_to "Войти", login_path, class: "nav-link" %>
+            <%= link_to "Зарегистрироваться", new_user_path, class: "nav-link signup-link" %>
           <% end %>
         </div>
       </nav>

@@ -1,7 +1,109 @@
-<section class="hero">
-  <div class="hero-content">
-    <h1>Your Personal Entertainment Universe</h1>
-    <p>Movies, music, and games tailored for you</p>
-    <%= link_to "Try Now", "#", class: "button" %>
-  </div>
-</section>
+<% content_for :title, "Кадр+ — Что посмотреть и во что сыграть" %>
+
+<div class="discovery-page">
+  <section class="discovery-topbar" aria-label="Поиск и фильтры">
+    <%= form_with url: root_path, method: :get, class: "discovery-search", local: true do |form| %>
+      <span class="search-symbol" aria-hidden="true">⌕</span>
+      <%= form.search_field :q, value: @query, placeholder: "Название, жанр или настроение", aria: { label: "Поиск фильмов, сериалов и игр" } %>
+      <%= form.hidden_field :kind, value: @kind unless @kind == "Все" %>
+      <%= form.submit "Найти", class: "search-submit" %>
+    <% end %>
+      <span class="topbar-note"><span class="live-dot"></span> Идея для вашего вечера</span>
+  </section>
+
+  <section class="feature-story">
+    <div class="feature-image" role="img" aria-label="Кинематографичный пейзаж дюн"></div>
+    <div class="feature-shade"></div>
+    <div class="feature-copy">
+      <p class="feature-kicker"><span>ВЫБОР РЕДАКЦИИ</span><span class="kicker-line"></span> 01 / 06</p>
+      <h1>Истории,<br>которые остаются.</h1>
+      <p class="feature-description">Большое кино, захватывающие сериалы и игры, в которых хочется задержаться.</p>
+      <div class="feature-actions">
+        <a class="button" href="#recommendations"><span aria-hidden="true">✦</span> Найти свою историю</a>
+        <a class="text-link" href="#recommendations">Смотреть подборку <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="feature-meta"><span>КИНО</span><span>СЕРИАЛЫ</span><span>ИГРЫ</span></div>
+    </div>
+    <div class="feature-index"><strong>01</strong><span>/ 06</span></div>
+  </section>
+
+  <section class="recommendations" id="recommendations">
+    <div class="section-title-row">
+      <div>
+        <p class="section-kicker">ПОДБОРКА РЕДАКЦИИ</p>
+        <h2>Выбрано для вас<span class="title-period">.</span></h2>
+      </div>
+      <p class="section-aside">Меньше бесконечного скролла.<br>Больше попаданий в настроение.</p>
+    </div>
+
+    <div class="filter-toolbar">
+      <nav class="kind-tabs" aria-label="Тип контента">
+        <% ["Все", "Фильмы", "Сериалы", "Игры"].each do |kind| %>
+          <% query = request.query_parameters.except("kind").merge("kind" => kind == "Все" ? nil : kind).compact %>
+          <%= link_to kind, root_path(query), class: "kind-tab #{'is-active' if @kind == kind}", aria: { current: (@kind == kind ? "page" : nil) } %>
+        <% end %>
+      </nav>
+      <%= form_with url: root_path, method: :get, class: "genre-filter", local: true do |form| %>
+        <%= form.hidden_field :kind, value: @kind unless @kind == "Все" %>
+        <%= form.hidden_field :q, value: @query if @query.present? %>
+        <%= form.select :genre, options_for_select([["Все жанры", ""], "Фантастика", "Триллер", "Экшен", "Драма", "Приключение"], @genre), {}, aria: { label: "Фильтр по жанру" }, onchange: "this.form.requestSubmit()" %>
+      <% end %>
+    </div>
+
+    <div class="recommendation-grid">
+      <% @titles.each do |title| %>
+        <article class="title-card">
+          <div class="poster poster-<%= title[:tone] %>">
+            <img src="<%= title[:image] %>" alt="Постер или обложка: <%= title[:name] %>" loading="lazy">
+            <span class="poster-type"><%= title[:kind] %></span>
+            <button type="button" class="save-button" data-save-title="<%= title[:name] %>" aria-label="Добавить «<%= title[:name] %>» в мой список" aria-pressed="false" title="Добавить в мой список"><span aria-hidden="true">♡</span></button>
+            <span class="poster-score"><span aria-hidden="true">★</span> <%= title[:score] %></span>
+          </div>
+          <div class="title-card-info">
+            <div class="title-card-heading"><h3><%= title[:name] %></h3><span><%= title[:year] %></span></div>
+            <p><span class="genre-mark"></span><%= title[:genre] %><span class="info-divider">·</span><%= title[:note] %></p>
+          </div>
+        </article>
+      <% end %>
+      <% if @titles.empty? %>
+        <div class="empty-results"><span aria-hidden="true">⌕</span><h3>Ничего не нашлось</h3><p>Попробуйте другой запрос или сбросьте фильтры.</p><%= link_to "Сбросить фильтры", root_path, class: "button button-outline" %></div>
+      <% end %>
+    </div>
+
+    <div class="demo-notice"><span class="notice-mark">i</span><span>Демонстрационные оценки приведены для ориентира. Персональные рекомендации и синхронизация списка с аккаунтом пока не подключены.</span></div>
+  </section>
+
+  <section class="taste-banner">
+    <div class="taste-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div><p class="section-kicker">ВАШ ВЕЧЕР — ВАШ ВЫБОР</p><h2>Хорошая история<br>начинается с настроения.</h2></div>
+    <a href="#recommendations" class="button button-light">Подобрать ещё <span aria-hidden="true">↗</span></a>
+  </section>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", () => {
+    const storageKey = "reelplay-watchlist";
+    const readList = () => {
+      try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
+      catch { return []; }
+    };
+    const saved = new Set(readList());
+    document.querySelectorAll("[data-save-title]").forEach((button) => {
+      const title = button.dataset.saveTitle;
+      const update = (isSaved) => {
+        button.setAttribute("aria-pressed", String(isSaved));
+        button.setAttribute("aria-label", `${isSaved ? "Убрать" : "Добавить"} «${title}» ${isSaved ? "из" : "в"} моего списка`);
+        button.title = isSaved ? "Убрать из моего списка" : "Добавить в мой список";
+        button.querySelector("span").textContent = isSaved ? "♥" : "♡";
+      };
+      update(saved.has(title));
+      button.addEventListener("click", () => {
+        if (saved.has(title)) saved.delete(title);
+        else saved.add(title);
+        localStorage.setItem(storageKey, JSON.stringify([...saved]));
+        update(saved.has(title));
+      });
+    });
+  });
+  document.dispatchEvent(new Event("turbo:load"));
+</script>
