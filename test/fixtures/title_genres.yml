@@ -1,0 +1,15 @@
+dune_fantasy:
+  title: dune
+  genre: fantasy
+
+dune_adventure:
+  title: dune
+  genre: adventure
+
+hades_adventure:
+  title: hades
+  genre: adventure
+
+drama_genre:
+  title: drama
+  genre: drama

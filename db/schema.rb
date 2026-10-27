@@ -10,9 +10,39 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "genres", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_genres_on_name", unique: true
+  end
+
+  create_table "title_genres", force: :cascade do |t|
+    t.bigint "title_id", null: false
+    t.bigint "genre_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["genre_id"], name: "index_title_genres_on_genre_id"
+    t.index ["title_id", "genre_id"], name: "index_title_genres_on_title_id_and_genre_id", unique: true
+    t.index ["title_id"], name: "index_title_genres_on_title_id"
+  end
+
+  create_table "titles", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "kind", null: false
+    t.text "description", null: false
+    t.integer "release_year", null: false
+    t.decimal "rating", precision: 3, scale: 1, null: false
+    t.string "poster_url", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_titles_on_kind"
+    t.index ["name", "kind"], name: "index_titles_on_name_and_kind", unique: true
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "username", null: false
@@ -23,4 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_000000) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["username"], name: "index_users_on_username", unique: true
   end
+
+  add_foreign_key "title_genres", "genres"
+  add_foreign_key "title_genres", "titles"
 end

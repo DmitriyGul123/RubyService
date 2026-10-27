@@ -1,0 +1,23 @@
+dune:
+  name: "Дюна: Часть вторая"
+  kind: Фильм
+  description: Пол Атрейдес объединяется с фременами.
+  release_year: 2024
+  rating: 8.5
+  poster_url: https://example.com/dune.jpg
+
+hades:
+  name: Hades
+  kind: Игра
+  description: Испытание в подземном мире.
+  release_year: 2020
+  rating: 9.1
+  poster_url: https://example.com/hades.jpg
+
+drama:
+  name: Оппенгеймер
+  kind: Фильм
+  description: История физика.
+  release_year: 2023
+  rating: 8.3
+  poster_url: https://example.com/oppenheimer.jpg

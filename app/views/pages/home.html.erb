@@ -46,22 +46,22 @@
       <%= form_with url: root_path, method: :get, class: "genre-filter", local: true do |form| %>
         <%= form.hidden_field :kind, value: @kind unless @kind == "Все" %>
         <%= form.hidden_field :q, value: @query if @query.present? %>
-        <%= form.select :genre, options_for_select([["Все жанры", ""], "Фантастика", "Триллер", "Экшен", "Драма", "Приключение"], @genre), {}, aria: { label: "Фильтр по жанру" }, onchange: "this.form.requestSubmit()" %>
+        <%= form.select :genre, options_for_select([["Все жанры", ""]] + @genres.map { |genre| [genre.name, genre.name] }, @genre), {}, aria: { label: "Фильтр по жанру" }, onchange: "this.form.requestSubmit()" %>
       <% end %>
     </div>
 
     <div class="recommendation-grid">
       <% @titles.each do |title| %>
         <article class="title-card">
-          <div class="poster poster-<%= title[:tone] %>">
-            <img src="<%= title[:image] %>" alt="Постер или обложка: <%= title[:name] %>" loading="lazy">
-            <span class="poster-type"><%= title[:kind] %></span>
-            <button type="button" class="save-button" data-save-title="<%= title[:name] %>" aria-label="Добавить «<%= title[:name] %>» в мой список" aria-pressed="false" title="Добавить в мой список"><span aria-hidden="true">♡</span></button>
-            <span class="poster-score"><span aria-hidden="true">★</span> <%= title[:score] %></span>
+          <div class="poster">
+            <img src="<%= title.poster_url %>" alt="Иллюстрация: <%= title.name %>" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=700&q=85'">
+            <span class="poster-type"><%= title.kind %></span>
+            <button type="button" class="save-button" data-save-title="<%= title.name %>" aria-label="Добавить «<%= title.name %>» в мой список" aria-pressed="false" title="Добавить в мой список"><span aria-hidden="true">♡</span></button>
+            <span class="poster-score"><span aria-hidden="true">★</span> <%= number_with_precision(title.rating, precision: 1) %></span>
           </div>
           <div class="title-card-info">
-            <div class="title-card-heading"><h3><%= title[:name] %></h3><span><%= title[:year] %></span></div>
-            <p><span class="genre-mark"></span><%= title[:genre] %><span class="info-divider">·</span><%= title[:note] %></p>
+            <div class="title-card-heading"><h3><%= title.name %></h3><span><%= title.release_year %></span></div>
+            <p><span class="genre-mark"></span><%= title.genre_names.join(", ") %><span class="info-divider">·</span><%= title.description %></p>
           </div>
         </article>
       <% end %>
