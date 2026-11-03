@@ -4,12 +4,21 @@ class WatchlistItemsController < ApplicationController
 
   def create
     current_user.watchlist_titles << @title unless current_user.watchlist_titles.exists?(@title.id)
-    redirect_back fallback_location: root_path, notice: "«#{@title.name}» добавлен в ваш список."
+    @watchlist_count = current_user.watchlist_items.count
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: root_path, notice: "«#{@title.name}» добавлен в ваш список." }
+    end
   end
 
   def destroy
     current_user.watchlist_items.find_by!(title: @title).destroy!
-    redirect_back fallback_location: watchlist_path, notice: "«#{@title.name}» удалён из вашего списка."
+    @watchlist_count = current_user.watchlist_items.count
+    @remove_from_watchlist = ActiveModel::Type::Boolean.new.cast(params[:from_watchlist])
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: watchlist_path, notice: "«#{@title.name}» удалён из вашего списка." }
+    end
   end
 
   private

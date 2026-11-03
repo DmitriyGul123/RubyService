@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => "/cable"
   root "pages#home"
 
   resources :users, only: %i[new create]

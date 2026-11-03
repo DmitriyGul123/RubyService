@@ -1,0 +1,4 @@
+<%= turbo_stream.replace "watchlist-count", partial: "shared/watchlist_count", locals: { user: current_user, count: @watchlist_count } %>
+<% if @remove_from_watchlist %>
+  <%= turbo_stream.remove dom_id(@title, :watchlist) %>
+<% end %>

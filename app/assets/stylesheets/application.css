@@ -69,6 +69,23 @@ a:hover {
   color: var(--muted);
 }
 
+.watchlist-count {
+  align-items: center;
+  background: #302b34;
+  border: 1px solid #514858;
+  border-radius: 999px;
+  color: #f0d9ff;
+  display: inline-flex;
+  font-size: 0.78rem;
+  gap: 0.35rem;
+  justify-content: center;
+  min-height: 1.8rem;
+  min-width: 2.5rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.watchlist-count span { color: var(--accent); }
+
 .nav-button {
   background: none;
   border: 0;

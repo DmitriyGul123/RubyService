@@ -20,6 +20,7 @@
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body>
@@ -36,6 +37,8 @@
           <% if current_user %>
             <span class="username"><%= current_user.username %></span>
             <%= link_to "Мой список", watchlist_path, class: "nav-link" %>
+            <%= turbo_stream_from current_user, :watchlist, data: { turbo_stream: true } %>
+            <%= render "shared/watchlist_count", user: current_user %>
             <%= button_to "Выйти", logout_path, method: :delete, class: "nav-button" %>
           <% else %>
             <%= link_to "Войти", login_path, class: "nav-link" %>

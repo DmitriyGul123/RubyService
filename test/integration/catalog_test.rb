@@ -134,6 +134,27 @@ class CatalogTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "saving a title responds with a turbo stream and broadcasts the updated count" do
+    user = users(:second_user)
+    log_in_as(user)
+
+    assert_turbo_stream_broadcasts [user, :watchlist] do
+      post title_watchlist_path(titles(:dune)), as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_turbo_stream action: "replace", target: "watchlist-count"
+  end
+
+  test "catalog filters have a frame target for partial navigation" do
+    get root_path
+
+    assert_response :success
+    assert_select "turbo-frame#catalog-results"
+    assert_select "a[data-turbo-frame='catalog-results']"
+    assert_select "form[data-turbo-frame='catalog-results']"
+  end
+
   test "another account cannot delete a title from someone else's watchlist" do
     post login_path, params: { email: users(:second_user).email, password: "password123" }
     assert_redirected_to root_path
@@ -151,5 +172,12 @@ class CatalogTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
     assert_equal "Дюна: Часть вторая", titles(:dune).reload.name
+  end
+
+  private
+
+  def log_in_as(user)
+    post login_path, params: { email: user.email, password: "password123" }
+    assert_redirected_to root_path
   end
 end

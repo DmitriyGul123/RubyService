@@ -1,0 +1,4 @@
+<span id="watchlist-count" class="watchlist-count" aria-live="polite" aria-atomic="true" title="Количество сохранённых тайтлов">
+  <span aria-hidden="true">♡</span>
+  <%= local_assigns.fetch(:count) { user.watchlist_items.count } %>
+</span>
