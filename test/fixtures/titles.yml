@@ -14,6 +14,14 @@ hades:
   rating: 9.1
   poster_url: https://example.com/hades.jpg
 
+severance:
+  name: Разделение
+  kind: Сериал
+  description: На работе люди не помнят свою жизнь вне офиса.
+  release_year: 2022
+  rating: 8.7
+  poster_url: https://static.tvmaze.com/uploads/images/medium_portrait/548/1371406.jpg
+
 drama:
   name: Оппенгеймер
   kind: Фильм

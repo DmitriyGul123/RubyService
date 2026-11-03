@@ -5,7 +5,7 @@ class CatalogTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select ".title-card", 3
+    assert_select ".title-card", 4
     assert_select ".title-card h3", text: "Дюна: Часть вторая"
   end
 
@@ -24,6 +24,14 @@ class CatalogTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".title-card", 1
     assert_select ".title-card h3", text: "Дюна: Часть вторая"
+  end
+
+  test "film and series cards render their catalog poster URLs" do
+    get root_path
+
+    assert_response :success
+    assert_select ".title-card img[src=?]", titles(:dune).poster_url
+    assert_select ".title-card img[src=?]", titles(:severance).poster_url
   end
 
   test "complete user path registers, filters, saves, signs out, signs in, and removes a title" do
@@ -103,5 +111,45 @@ class CatalogTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select ".flash.alert", text: /Войдите, чтобы открыть свой список/
+  end
+
+  test "guest cannot save a title and the item is not created" do
+    assert_no_difference("WatchlistItem.count") do
+      post title_watchlist_path(titles(:dune))
+    end
+
+    assert_redirected_to login_path
+  end
+
+  test "saving the same title twice does not create a duplicate" do
+    post login_path, params: { email: users(:second_user).email, password: "password123" }
+    assert_redirected_to root_path
+
+    assert_difference("WatchlistItem.count", 1) do
+      post title_watchlist_path(titles(:dune))
+    end
+
+    assert_no_difference("WatchlistItem.count") do
+      post title_watchlist_path(titles(:dune))
+    end
+  end
+
+  test "another account cannot delete a title from someone else's watchlist" do
+    post login_path, params: { email: users(:second_user).email, password: "password123" }
+    assert_redirected_to root_path
+
+    assert_no_difference("WatchlistItem.count") do
+      delete title_watchlist_path(titles(:dune))
+    end
+
+    assert_response :not_found
+    assert WatchlistItem.exists?(user: users(:first_user), title: titles(:dune))
+  end
+
+  test "catalog cannot be edited because no edit route is exposed" do
+    patch "/titles/#{titles(:dune).id}", params: { title: { name: "Подменённое название" } }
+
+    assert_response :not_found
+    assert_equal "Дюна: Часть вторая", titles(:dune).reload.name
   end
 end
