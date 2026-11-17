@@ -1,26 +1,19 @@
 Rails.application.routes.draw do
-  mount ActionCable.server => "/cable"
   root "pages#home"
+  mount ActionCable.server => "/cable"
 
   resources :users, only: %i[new create]
-  post "titles/:title_id/watchlist", to: "watchlist_items#create", as: :title_watchlist
-  delete "titles/:title_id/watchlist", to: "watchlist_items#destroy"
+
+  get "login", to: "sessions#new", as: :login
+  post "login", to: "sessions#create"
+  delete "logout", to: "sessions#destroy", as: :logout
+
   get "watchlist", to: "pages#watchlist", as: :watchlist
 
-  get "login", to: "sessions#new"
-  post "login", to: "sessions#create"
-  delete "logout", to: "sessions#destroy"
+  resources :titles, only: :show do
+    resource :watchlist, only: %i[create destroy], controller: :watchlist_items
+    resources :reviews, only: %i[create update]
+  end
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
+  get "up", to: "rails/health#show", as: :rails_health_check
 end

@@ -1,0 +1,15 @@
+<% if current_user %>
+  <%= button_to title_watchlist_path(title),
+    method: saved ? :delete : :post,
+    params: (saved && from_watchlist ? { from_watchlist: true } : {}),
+    form: { id: dom_id(title, :watchlist_button), data: { turbo_stream: true } },
+    class: "save-button #{'is-saved' if saved}",
+    aria: { label: "#{saved ? 'Убрать' : 'Добавить'} «#{title.name}» #{saved ? 'из' : 'в'} моего списка" },
+    title: saved ? "Убрать из моего списка" : "Добавить в мой список" do %>
+    <span aria-hidden="true"><%= saved ? "♥" : "♡" %></span>
+  <% end %>
+<% else %>
+  <%= link_to login_path, class: "save-button", aria: { label: "Войдите, чтобы сохранить «#{title.name}»" }, title: "Войти, чтобы сохранить" do %>
+    <span aria-hidden="true">♡</span>
+  <% end %>
+<% end %>

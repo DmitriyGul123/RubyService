@@ -1,0 +1,71 @@
+<% content_for :title, "#{@title.name} — Кадр+" %>
+
+<div class="title-detail-page">
+  <%= link_to "← К подборке", root_path, class: "title-back-link" %>
+
+  <section class="title-detail-hero">
+    <div class="title-detail-poster">
+      <img src="<%= @title.poster_url %>" alt="Иллюстрация: <%= @title.name %>">
+      <%= render "shared/watchlist_button", title: @title, saved: @in_watchlist, from_watchlist: false %>
+    </div>
+
+    <div class="title-detail-copy">
+      <p class="section-kicker"><%= @title.kind.upcase %> · <%= @title.release_year %></p>
+      <h1><%= @title.name %></h1>
+      <p class="title-detail-meta">
+        <span class="title-rating"><span aria-hidden="true">★</span> <%= number_with_precision(@title.rating, precision: 1) %></span>
+        <span><%= @title.genres.order(:name).map(&:name).join(", ") %></span>
+      </p>
+      <h2>Описание</h2>
+      <p class="title-description"><%= @title.description %></p>
+      <%= link_to "К отзывам", "#reviews", class: "text-link" %>
+    </div>
+  </section>
+
+  <section class="reviews-section" id="reviews">
+    <div class="section-title-row">
+      <div>
+        <p class="section-kicker">ОТЗЫВЫ ПОЛЬЗОВАТЕЛЕЙ</p>
+        <h2>Отзывы<span class="title-period">.</span></h2>
+      </div>
+      <p class="section-aside"><%= @reviews.size %> мнений</p>
+    </div>
+
+    <% if current_user %>
+      <div class="review-form-card">
+        <h3>Поделитесь впечатлением</h3>
+        <%= form_with model: [@title, @review], class: "review-form" do |form| %>
+          <% if @review.errors.any? %>
+            <div class="form-errors">
+              <% @review.errors.full_messages.each do |message| %>
+                <p><%= message %></p>
+              <% end %>
+            </div>
+          <% end %>
+          <%= form.label :rating, "Ваша оценка" %>
+          <%= form.select :rating, options_for_select((1..10).to_a, @review.rating || 5) %>
+          <%= form.label :body, "Ваш отзыв" %>
+          <%= form.text_area :body, rows: 4, maxlength: 2000, required: true, placeholder: "Что вам понравилось или запомнилось?" %>
+          <%= form.submit(@review.persisted? ? "Сохранить отзыв" : "Опубликовать отзыв", class: "button") %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="review-sign-in"><%= link_to "Войдите", login_path %>, чтобы оставить отзыв.</p>
+    <% end %>
+
+    <div class="review-list">
+      <% @reviews.each do |review| %>
+        <article class="review-card">
+          <div class="review-heading">
+            <h3><%= review.user.username %></h3>
+            <div class="review-meta"><span class="review-rating">★ <%= review.rating %>/10</span><time datetime="<%= review.created_at.iso8601 %>"><%= review.created_at.strftime("%d.%m.%Y") %></time></div>
+          </div>
+          <p><%= review.body %></p>
+        </article>
+      <% end %>
+      <% if @reviews.empty? %>
+        <p class="review-empty">Пока нет отзывов. Станьте первым, кто поделится впечатлением.</p>
+      <% end %>
+    </div>
+  </section>
+</div>

@@ -9,6 +9,65 @@ class CatalogTest < ActionDispatch::IntegrationTest
     assert_select ".title-card h3", text: "Дюна: Часть вторая"
   end
 
+  test "all catalog cards link to a detail page with reviews" do
+    get root_path
+
+    assert_response :success
+    assert_select ".title-card a.title-detail-link", 4
+    assert_select ".title-card a.title-detail-link[href=?]", title_path(titles(:dune))
+    assert_select ".title-card a.title-detail-link[href=?]", title_path(titles(:hades))
+    assert_select ".title-card a.title-detail-link[href=?]", title_path(titles(:severance))
+    assert_select ".title-card .share-menu", 4
+    assert_select ".title-card .share-popover p", text: "Скопировать ссылку в буфер обмена", count: 4
+    assert_select ".title-card [data-share-copy]", 4
+
+    get title_path(titles(:dune))
+
+    assert_response :success
+    assert_select "h1", text: "Дюна: Часть вторая"
+    assert_select ".title-description", text: titles(:dune).description
+    assert_select "#reviews"
+    assert_select ".review-sign-in"
+  end
+
+  test "signed-in users can add reviews to a title" do
+    user = User.create!(username: "review_writer", email: "review_writer@example.com", password: "password123")
+    log_in_as(user)
+
+    assert_difference("Review.count", 1) do
+      post title_reviews_path(titles(:dune)), params: { review: { body: "Сильная история и отличная атмосфера.", rating: 9 } }
+    end
+
+    assert_redirected_to title_path(titles(:dune), anchor: "reviews")
+    follow_redirect!
+    assert_select ".review-card", text: /Сильная история и отличная атмосфера/
+  end
+
+  test "review author can update their existing review" do
+    user = User.create!(username: "review_editor", email: "review_editor@example.com", password: "password123")
+    title = titles(:dune)
+    review = user.reviews.create!(title: title, body: "Первый текст.", rating: 7)
+    log_in_as(user)
+
+    assert_no_difference("Review.count") do
+      patch title_review_path(title, review), params: { review: { body: "Обновлённый текст.", rating: 9 } }
+    end
+
+    assert_redirected_to title_path(title, anchor: "reviews")
+    assert_equal "Обновлённый текст.", review.reload.body
+    assert_equal 9, review.rating
+  end
+
+  test "invalid review is shown on the film detail page" do
+    user = User.create!(username: "invalid_review_writer", email: "invalid_review_writer@example.com", password: "password123")
+    log_in_as(user)
+    post title_reviews_path(titles(:dune)), params: { review: { body: " ", rating: 8 } }
+
+    assert_response :unprocessable_content
+    assert_select ".form-errors"
+    assert_select "form.review-form"
+  end
+
   test "filters titles by content kind" do
     get root_path, params: { kind: "Игры" }
 
@@ -144,15 +203,44 @@ class CatalogTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_turbo_stream action: "replace", target: "watchlist-count"
+    assert_turbo_stream action: "replace", target: dom_id(titles(:dune), :watchlist_button)
   end
 
-  test "catalog filters have a frame target for partial navigation" do
+  test "watchlist buttons opt in to turbo stream requests" do
+    log_in_as(users(:second_user))
     get root_path
 
     assert_response :success
-    assert_select "turbo-frame#catalog-results"
-    assert_select "a[data-turbo-frame='catalog-results']"
-    assert_select "form[data-turbo-frame='catalog-results']"
+    assert_select "form##{dom_id(titles(:dune), :watchlist_button)}[data-turbo-stream='true']"
+  end
+
+  test "removing a title from the watchlist page removes its card without a redirect" do
+    user = User.create!(username: "watchlist_ajax_user", email: "watchlist_ajax_user@example.com", password: "password123")
+    title = titles(:dune)
+    log_in_as(user)
+    WatchlistItem.create!(user: user, title: title)
+
+    delete title_watchlist_path(title), params: { from_watchlist: true }, as: :turbo_stream
+
+    assert_response :success
+    assert_turbo_stream action: "remove", target: dom_id(title, :watchlist)
+  end
+
+  test "catalog filters update the tabs and results in the same frame" do
+    get root_path
+
+    assert_response :success
+    assert_select "turbo-frame#recommendations"
+    assert_select "a.kind-tab[data-turbo-frame='recommendations']"
+    assert_select "form[data-turbo-frame='recommendations']"
+  end
+
+  test "frame navigation moves the active tab to the selected kind" do
+    get root_path, params: { kind: "Игры" }, headers: { "Turbo-Frame" => "recommendations" }
+
+    assert_response :success
+    assert_select "a.kind-tab.is-active", count: 1, text: "Игры"
+    assert_select "a.kind-tab[aria-current='page']", count: 1, text: "Игры"
   end
 
   test "another account cannot delete a title from someone else's watchlist" do

@@ -3,6 +3,7 @@ class Title < ApplicationRecord
 
   has_many :title_genres, dependent: :destroy
   has_many :genres, through: :title_genres
+  has_many :reviews, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :kind, case_sensitive: false }
   validates :kind, inclusion: { in: KINDS }

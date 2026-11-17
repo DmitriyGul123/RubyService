@@ -1,1 +1,2 @@
 <%= turbo_stream.replace "watchlist-count", partial: "shared/watchlist_count", locals: { user: current_user, count: @watchlist_count } %>
+<%= turbo_stream.replace dom_id(@title, :watchlist_button), partial: "shared/watchlist_button", locals: { title: @title, saved: true, from_watchlist: false } %>
