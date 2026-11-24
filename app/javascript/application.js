@@ -1,5 +1,29 @@
 import "@hotwired/turbo-rails"
 
+Turbo.StreamActions.refresh_frame = function () {
+  const frame = document.getElementById(this.target)
+  if (!(frame instanceof HTMLElement) || !frame.matches("turbo-frame")) return
+
+  const url = frame.dataset.refreshUrl
+  if (!url) return
+
+  if (frame.getAttribute("src") === url) {
+    frame.reload()
+  } else {
+    frame.src = url
+  }
+}
+
+document.addEventListener("turbo:before-fetch-request", (event) => {
+  const frame = event.target
+  if (!(frame instanceof HTMLElement) || !frame.matches("turbo-frame#recommendations")) return
+
+  const url = new URL(event.detail.url, window.location.href)
+  if (url.origin === window.location.origin) {
+    frame.dataset.refreshUrl = `${url.pathname}${url.search}${url.hash}`
+  }
+})
+
 document.addEventListener("click", async (event) => {
   const target = event.target
   if (!(target instanceof Element)) return

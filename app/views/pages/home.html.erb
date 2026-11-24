@@ -27,7 +27,7 @@
     <div class="feature-index"><strong>01</strong><span>/ 06</span></div>
   </section>
 
-  <%= turbo_frame_tag "recommendations" do %>
+  <%= turbo_frame_tag "recommendations", data: { refresh_url: request.fullpath } do %>
   <section class="recommendations">
     <div class="section-title-row">
       <div>

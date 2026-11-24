@@ -230,9 +230,29 @@ class CatalogTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "turbo-frame#recommendations"
+    assert_select "turbo-frame#recommendations[data-refresh-url=?]", root_path
     assert_select "a.kind-tab[data-turbo-frame='recommendations']"
     assert_select "form[data-turbo-frame='recommendations']"
+  end
+
+  test "saving and removing a title broadcasts a refresh for catalog frames in other tabs" do
+    user = users(:second_user)
+    log_in_as(user)
+
+    title = titles(:dune)
+    create_broadcasts = capture_turbo_stream_broadcasts [user, :watchlist] do
+      post title_watchlist_path(title), as: :turbo_stream
+    end
+
+    assert_equal %w[replace refresh_frame], create_broadcasts.map { |broadcast| broadcast["action"] }
+    assert_equal "recommendations", create_broadcasts.last["target"]
+
+    destroy_broadcasts = capture_turbo_stream_broadcasts [user, :watchlist] do
+      delete title_watchlist_path(title), as: :turbo_stream
+    end
+
+    assert_equal %w[replace refresh_frame], destroy_broadcasts.map { |broadcast| broadcast["action"] }
+    assert_equal "recommendations", destroy_broadcasts.last["target"]
   end
 
   test "frame navigation moves the active tab to the selected kind" do

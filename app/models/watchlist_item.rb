@@ -16,5 +16,9 @@ class WatchlistItem < ApplicationRecord
         partial: "shared/watchlist_count",
         locals: { user: user }
       )
+
+    Turbo::StreamsChannel.broadcast_action_to user, :watchlist,
+      action: :refresh_frame,
+      target: "recommendations"
   end
 end
